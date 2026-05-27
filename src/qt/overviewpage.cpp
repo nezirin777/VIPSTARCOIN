@@ -175,7 +175,7 @@ public:
         painter->drawText(tokenBalanceRect, Qt::AlignLeft|Qt::AlignVCenter, tokenBalance);
 
         QFont addressFont = option.font;
-        addressFont.setPixelSize(addressFont.pixelSize() * 0.9);
+        if(addressFont.pixelSize() > 0) addressFont.setPixelSize(addressFont.pixelSize() * 0.9);
         painter->setFont(addressFont);
         QRect receiveAddressRect(decorationRect.right() + MARGIN, nameRect.bottom(), mainRect.width() - decorationSize, decorationSize / 2);
         painter->drawText(receiveAddressRect, Qt::AlignLeft|Qt::AlignBottom, receiveAddress);

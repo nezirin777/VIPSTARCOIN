@@ -58,6 +58,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
 {
     fHaveWatchOnly = wallet->HaveWatchOnly();
     fForceCheckBalanceChanged = false;
+    fForceCheckTokenBalanceChanged = false;
 
     addressTableModel = new AddressTableModel(wallet, this);
     contractTableModel = new ContractTableModel(wallet, this);
@@ -148,6 +149,10 @@ void WalletModel::pollBalanceChanged()
     // Get required locks upfront. This avoids the GUI from getting stuck on
     // periodical polls if the core is holding the locks for a longer time -
     // for example, during a wallet rescan.
+    // During IBD, skip heavy polling to keep UI responsive
+    if(IsInitialBlockDownload() && !fForceCheckBalanceChanged && !fForceCheckTokenBalanceChanged)
+        return;
+
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain)
         return;
@@ -156,23 +161,37 @@ void WalletModel::pollBalanceChanged()
         return;
 
     bool cachedNumBlocksChanged = chainActive.Height() != cachedNumBlocks;
-    if(fForceCheckBalanceChanged || cachedNumBlocksChanged)
+    bool initialBlockDownload = IsInitialBlockDownload();
+    bool tokenBalanceUpdateDue = fForceCheckTokenBalanceChanged && !initialBlockDownload;
+    if(fForceCheckBalanceChanged || cachedNumBlocksChanged || tokenBalanceUpdateDue)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
 
-        checkBalanceChanged();
-        if(transactionTableModel)
-            transactionTableModel->updateConfirmations();
-
-        if(tokenTransactionTableModel)
-            tokenTransactionTableModel->updateConfirmations();
-
-        if(cachedNumBlocksChanged)
+        if(!initialBlockDownload)
         {
-            checkTokenBalanceChanged();
+            checkBalanceChanged();
+            if(transactionTableModel)
+                transactionTableModel->updateConfirmations();
+
+            if(tokenTransactionTableModel)
+                tokenTransactionTableModel->updateConfirmations();
+        }
+
+        if(cachedNumBlocksChanged || tokenBalanceUpdateDue)
+        {
+            // Token balance refreshes can perform contract calls; defer them during IBD.
+            if(initialBlockDownload)
+            {
+                fForceCheckTokenBalanceChanged = true;
+            }
+            else
+            {
+                fForceCheckTokenBalanceChanged = false;
+                checkTokenBalanceChanged();
+            }
         }
     }
 }

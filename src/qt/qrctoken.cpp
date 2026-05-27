@@ -70,7 +70,7 @@ public:
         painter->drawText(tokenBalanceRect, Qt::AlignRight|Qt::AlignTop, tokenBalance);
 
         QFont addressFont = option.font;
-        addressFont.setPixelSize(addressFont.pixelSize() * 0.9);
+        if(addressFont.pixelSize() > 0) addressFont.setPixelSize(addressFont.pixelSize() * 0.9);
         painter->setFont(addressFont);
 
         QRect receiveAddressRect(decorationRect.right() + MARGIN, tokenSymbolRect.bottom(), mainRect.width() - decorationSize, decorationSize / 2);
