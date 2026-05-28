@@ -122,3 +122,6 @@ contrib/devtools/split-debug.sh
 .idea/
 CMakeLists.txt
 cmake-build-debug/
+depends/work/
+depends/built/
+depends/sdk-sources/
