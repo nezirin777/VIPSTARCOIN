@@ -1263,6 +1263,8 @@ void BitcoinGUI::updateWeight()
 {
     if(!pwalletMain)
         return;
+    if(IsInitialBlockDownload())
+        return;
 
     TRY_LOCK(cs_main, lockMain);
     if (!lockMain)

@@ -149,8 +149,8 @@ void WalletModel::pollBalanceChanged()
     // Get required locks upfront. This avoids the GUI from getting stuck on
     // periodical polls if the core is holding the locks for a longer time -
     // for example, during a wallet rescan.
-    // During IBD, skip heavy polling to keep UI responsive
-    if(IsInitialBlockDownload() && !fForceCheckBalanceChanged && !fForceCheckTokenBalanceChanged)
+    // During IBD, skip ALL polling - will refresh when sync completes
+    if(IsInitialBlockDownload())
         return;
 
     TRY_LOCK(cs_main, lockMain);

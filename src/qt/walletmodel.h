@@ -246,6 +246,7 @@ private:
     CWallet *wallet;
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
+    bool fForceCheckTokenBalanceChanged;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)

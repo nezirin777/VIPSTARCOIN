@@ -69,13 +69,15 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 int ClientModel::getNumBlocks() const
 {
-    LOCK(cs_main);
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) return 0;
     return chainActive.Height();
 }
 
 int ClientModel::getHeaderTipHeight() const
 {
-    LOCK(cs_main);
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) return 0;
     if (!pindexBestHeader)
         return 0;
     return pindexBestHeader->nHeight;
@@ -83,7 +85,8 @@ int ClientModel::getHeaderTipHeight() const
 
 int64_t ClientModel::getHeaderTipTime() const
 {
-    LOCK(cs_main);
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) return 0;
     if (!pindexBestHeader)
         return 0;
     return pindexBestHeader->GetBlockTime();
@@ -105,7 +108,8 @@ quint64 ClientModel::getTotalBytesSent() const
 
 QDateTime ClientModel::getLastBlockDate() const
 {
-    LOCK(cs_main);
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) return QDateTime::currentDateTime();
 
     if (chainActive.Tip())
         return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
@@ -128,7 +132,8 @@ double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
     if (!tip)
     {
-        LOCK(cs_main);
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) return 0.0;
         tip = chainActive.Tip();
     }
     return GuessVerificationProgress(Params().TxData(), tip);
@@ -208,7 +213,13 @@ QString ClientModel::getStatusBarWarnings() const
 
 void ClientModel::getGasInfo(uint64_t& blockGasLimit, uint64_t& minGasPrice, uint64_t& nGasPrice) const
 {
-    LOCK(cs_main);
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) {
+        blockGasLimit = 0;
+        minGasPrice = DEFAULT_GAS_PRICE;
+        nGasPrice = DEFAULT_GAS_PRICE;
+        return;
+    }
 
     QtumDGP qtumDGP(globalState.get(), fGettingValuesDGP);
     blockGasLimit = qtumDGP.getBlockGasLimit(chainActive.Height());
